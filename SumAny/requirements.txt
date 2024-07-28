@@ -1,8 +1,7 @@
-streamlit==1.37.0
-transformers==4.43.3
-scikit-learn==1.0.2
-pyttsx3==2.90
-PyPDF2==3.0.1
-python-docx==0.8.11
-SpeechRecognition==3.8.1
-pydub==0.25.1
+streamlit
+transformers
+scikit-learn
+pyttsx3
+PyPDF2
+python-docx
+SpeechRecognition
