@@ -17,7 +17,7 @@ st.markdown("""
     - **Text Summarization**: Paste your text directly or upload files (PDF, Word, text, audio) to generate concise summaries.
     - **Keyword Highlighting**: Automatically highlights important keywords and entities within the summarized text.
     - **Text-to-Speech**: Listen to your summaries with our integrated text-to-speech functionality.
-    - **Interactive Chatbot**: Ask questions about the summarized content using our chatbot powered by advanced NLP models.
+    - **Interactive Chatbot**: Ask questions about the text content using our chatbot powered by advanced NLP models.
     
     ### How to Use:
     1. **Paste or Upload**: Paste your text directly into the provided text area or upload a supported file.
@@ -25,7 +25,7 @@ st.markdown("""
     3. **Summarize**: Click the "Summarize" button to generate your summary.
     4. **Interact**: Use the Short Q/A chatbot to ask questions about the summarized text for deeper insights.
 
-    Explore the features by selecting a page from the sidebar!
+    Explore the features by selecting the summarize from the sidebar!
 """)
 
-st.sidebar.success("Select a page above.")
+st.sidebar.success("Select the page above.")
