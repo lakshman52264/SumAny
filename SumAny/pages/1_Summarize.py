@@ -7,68 +7,42 @@ import pyttsx3
 import PyPDF2
 import docx
 import speech_recognition as sr
-import io
 
 # Load summarization model
 @st.cache_resource
 def load_summarizer():
-    return pipeline("summarization", model="sshleifer/distilbart-cnn-12-6", framework="pt")
+    return pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
 
 extractive_summarizer = load_summarizer()
 
 # Load question-answering model
 @st.cache_resource
 def load_qa_model():
-    return pipeline("question-answering", model="distilbert-base-cased-distilled-squad")
+    return pipeline("question-answering")
 
 qa_pipeline = load_qa_model()
 
-# Load NER model
-@st.cache_resource
-def load_ner_model():
-    return pipeline("ner", model="dbmdz/bert-large-cased-finetuned-conll03-english", aggregation_strategy="simple")
-
-ner = load_ner_model()
-
-def summarize_chunk(chunk, max_length=150):
-    summary = extractive_summarizer(chunk, max_length=max_length, min_length=30, do_sample=False)
+def summarize_chunk(chunk):
+    summary = extractive_summarizer(chunk, max_length=150, min_length=30, do_sample=False)
     return summary[0]['summary_text']
 
-def extractive_summarize(text, max_length=150):
+def extractive_summarize(text):
     max_chunk_size = 1024  # max input size for the model
     overlap = 200  # Overlap between chunks to maintain context
     text_chunks = [text[i:i + max_chunk_size] for i in range(0, len(text), max_chunk_size - overlap)]
 
     summaries = []
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        future_to_chunk = {executor.submit(summarize_chunk, chunk, max_length): chunk for chunk in text_chunks}
+        future_to_chunk = {executor.submit(summarize_chunk, chunk): chunk for chunk in text_chunks}
         for future in concurrent.futures.as_completed(future_to_chunk):
             summaries.append(future.result())
     
     return ' '.join(summaries)
 
-def highlight_keywords(text):
-    # Get named entities
-    entities = ner(text)
-    
-    # Create a set to store the unique entities
-    entity_set = set()
-    
-    for entity in entities:
-        entity_set.add((entity['start'], entity['end'], entity['word']))
-    
-    # Sort the entities by their start position
-    sorted_entities = sorted(entity_set, key=lambda x: x[0])
-    
-    # Highlight keywords in the text using HTML tags
-    highlighted_text = ""
-    current_pos = 0
-    for start, end, word in sorted_entities:
-        highlighted_text += text[current_pos:start] + f"<mark>{word}</mark>"
-        current_pos = end
-    highlighted_text += text[current_pos:]
-    
-    return highlighted_text
+def highlight_keywords(text: str, keywords: List[str]) -> str:
+    for keyword in keywords:
+        text = text.replace(keyword, f"<mark style='background-color: yellow; color: green;'>{keyword}</mark>")
+    return text
 
 def extract_keywords_tfidf(text: str, num_keywords: int = 5) -> List[str]:
     vectorizer = TfidfVectorizer(stop_words='english')
@@ -135,24 +109,56 @@ if uploaded_file:
     elif uploaded_file.type == "audio/wav":
         text = extract_text_from_audio(uploaded_file)
 
-# Text area for pasting text
-text = st.text_area("Or paste your text here", value=text, height=200)
+# Text area for pasting text with character counter
+text = st.text_area("Or paste your text here", value=text, height=200, key="text_area")
 text_length = len(text)
+counter_text = f"{text_length}/{max_chars}"
 
-# Display character count
-st.write(f"Character count: {text_length}/{max_chars}")
+# Custom CSS for the text counter inside the text area
+st.markdown(f"""
+    <style>
+    .stTextArea textarea {{
+        position: relative;
+    }}
+    .stTextArea:after {{
+        content: '{counter_text}';
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        font-size: 12px;
+        color: grey;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+
+st.session_state.context = text
 
 # Sidebar settings
 st.sidebar.header("Settings")
 highlight_keywords_checkbox = st.sidebar.checkbox("Highlight keywords in summary")
 read_aloud_checkbox = st.sidebar.checkbox("Read out the summary")
 
+# Chatbot settings
+st.sidebar.header("AskAny-Mini Bot")
+with st.sidebar.expander("Chat with our Q/A bot about the text"):
+    user_input = st.text_input("You:", "")
+    if st.button("Send", key="chat"):
+        if user_input.strip():
+            with st.spinner('Generating response...'):
+                response = qa_pipeline(question=user_input, context=st.session_state.context )
+                st.write(f"Bot: {response['answer']}")
+        else:
+            st.warning("Please enter a query to ask about the text.")
+
 if st.button("Summarize"):
-    if text.strip():  # Check if text is not empty
+    if text_length > max_chars:
+        st.warning(f"Text exceeds the maximum allowed character count of {max_chars}. Please reduce the text length.")
+    elif text.strip():  # Check if text is not empty
         with st.spinner('Summarizing...'):
-            summary = extractive_summarize(text, max_length=min(150, len(text)//2))
+            summary = extractive_summarize(text)
         if highlight_keywords_checkbox:
-            summary = highlight_keywords(summary)
+            keywords = extract_keywords_tfidf(summary)
+            summary = highlight_keywords(summary, keywords)
             st.markdown(f"<div>{summary}</div>", unsafe_allow_html=True)
         else:
             st.subheader("Summary")
@@ -165,19 +171,7 @@ if st.button("Summarize"):
     else:
         st.warning("Please enter some text to summarize.")
 
-# Chatbot popup
-if 'context' in st.session_state:
-    with st.expander("Chat with our bot about the text"):
-        user_input = st.text_input("You:", "")
-        if st.button("Send", key="chat"):
-            if user_input.strip():
-                with st.spinner('Generating response...'):
-                    response = qa_pipeline(question=user_input, context=st.session_state['context'])
-                    st.write(f"Bot: {response['answer']}")
-            else:
-                st.warning("Please enter a query to ask about the text.")
-
 st.markdown("""
     ---
-    Developed by [Your Name](https://your-portfolio-link.com)
+    Developed by [K Durga Sai Lakshman Kumar , Roshini M , Rishika BR]
 """)
