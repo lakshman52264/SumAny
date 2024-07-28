@@ -19,29 +19,29 @@ extractive_summarizer = load_summarizer()
 # Load question-answering model
 @st.cache_resource
 def load_qa_model():
-    return pipeline("question-answering")
+    return pipeline("question-answering", model="distilbert-base-cased-distilled-squad")
 
 qa_pipeline = load_qa_model()
 
 # Load NER model
 @st.cache_resource
 def load_ner_model():
-    return pipeline("ner", grouped_entities=True)
+    return pipeline("ner", model="dbmdz/bert-large-cased-finetuned-conll03-english", aggregation_strategy="simple")
 
 ner = load_ner_model()
 
-def summarize_chunk(chunk):
-    summary = extractive_summarizer(chunk, max_length=150, min_length=30, do_sample=False)
+def summarize_chunk(chunk, max_length=150):
+    summary = extractive_summarizer(chunk, max_length=max_length, min_length=30, do_sample=False)
     return summary[0]['summary_text']
 
-def extractive_summarize(text):
+def extractive_summarize(text, max_length=150):
     max_chunk_size = 1024  # max input size for the model
     overlap = 200  # Overlap between chunks to maintain context
     text_chunks = [text[i:i + max_chunk_size] for i in range(0, len(text), max_chunk_size - overlap)]
 
     summaries = []
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        future_to_chunk = {executor.submit(summarize_chunk, chunk): chunk for chunk in text_chunks}
+        future_to_chunk = {executor.submit(summarize_chunk, chunk, max_length): chunk for chunk in text_chunks}
         for future in concurrent.futures.as_completed(future_to_chunk):
             summaries.append(future.result())
     
@@ -150,7 +150,7 @@ read_aloud_checkbox = st.sidebar.checkbox("Read out the summary")
 if st.button("Summarize"):
     if text.strip():  # Check if text is not empty
         with st.spinner('Summarizing...'):
-            summary = extractive_summarize(text)
+            summary = extractive_summarize(text, max_length=min(150, len(text)//2))
         if highlight_keywords_checkbox:
             summary = highlight_keywords(summary)
             st.markdown(f"<div>{summary}</div>", unsafe_allow_html=True)
