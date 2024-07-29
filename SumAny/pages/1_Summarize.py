@@ -181,6 +181,10 @@ if st.button("Summarize"):
         st.session_state['context'] = text
     else:
         st.warning("Please enter some text to summarize.")
+
+st.markdown('___')
+st.write(':point_left: Use the menu at left to access settings and bot (click on > if closed).')
+st.markdown('___')
         
 st.sidebar.header("Feedback")
 feedback = st.sidebar.text_area("Your feedback is valuable !")
