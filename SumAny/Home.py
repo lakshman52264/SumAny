@@ -8,7 +8,7 @@ st.set_page_config(
 st.title("Welcome to SumAny")
 
 st.markdown('___')
-st.write(':point_left: Use the menu at left to select a task (click on > if closed).')
+st.write(':point_left: Use the menu at left to select summarize page (click on > if closed).')
 st.markdown('___')
 
 st.markdown("""
