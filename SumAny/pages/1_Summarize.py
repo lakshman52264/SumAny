@@ -183,7 +183,7 @@ if st.button("Summarize"):
         st.warning("Please enter some text to summarize.")
         
 st.sidebar.header("Feedback")
-feedback = st.sidebar.text_area("Feedback")
+feedback = st.sidebar.text_area("Your feedback is valuable !")
 
 if st.sidebar.button("Submit Feedback"):
     if feedback.strip():
