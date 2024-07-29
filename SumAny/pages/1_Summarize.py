@@ -7,7 +7,7 @@ import pyttsx3
 import PyPDF2
 import docx
 import speech_recognition as sr
-import streamlit as st
+import requests
 
 
 # Load summarization model
