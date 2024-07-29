@@ -184,6 +184,7 @@ if st.button("Summarize"):
 
 st.markdown('___')
 st.write(':point_left: Use the menu at left to access settings and bot (click on > if closed).')
+st.write(':point_left: Your valuable feedback would be greatly appreciated (click on > if closed).')
 st.markdown('___')
         
 st.sidebar.header("Feedback")
