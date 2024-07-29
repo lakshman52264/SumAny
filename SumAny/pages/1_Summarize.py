@@ -89,6 +89,15 @@ def extract_text_from_audio(file):
     except (sr.UnknownValueError, sr.RequestError, ValueError) as e:
         st.error(f"Error processing audio file: {e}")
         return ""
+        
+def submit_feedback(feedback):
+    form_url = "https://docs.google.com/forms/d/e/1FAIpQLScAy_JyClKuDT4cxtsV6tToEaYRohv5tVPDdi61wpuwDIZDEA/formResponse"
+    form_data = {
+        "entry.78796369": feedback  # Use the correct name attribute of the feedback field
+    }
+    response = requests.post(form_url, data=form_data)
+    return response.status_code, response.text
+
 
 # Streamlit App
 st.title("SumAny - Summarize Anything")
@@ -170,8 +179,16 @@ if st.button("Summarize"):
         st.session_state['context'] = text
     else:
         st.warning("Please enter some text to summarize.")
+        
+st.sidebar.header("Feedback")
+feedback = st.sidebar.text_area("Feedback")
 
-st.markdown("""
-    ---
-    Developed by [K Durga Sai Lakshman Kumar , Roshini M , Rishika BR]
-""")
+if st.sidebar.button("Submit Feedback"):
+    if feedback.strip():
+        status_code, response_text = submit_feedback(feedback)
+        if status_code == 200:
+            st.sidebar.success("Feedback submitted successfully!")
+        else:
+            st.sidebar.error(f"Failed to submit feedback. Status code: {status_code}, Response: {response_text}")
+    else:
+        st.sidebar.warning("Please enter your feedback before submitting.")
