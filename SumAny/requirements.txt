@@ -7,3 +7,4 @@ pyttsx3
 PyPDF2
 python-docx
 SpeechRecognition
+requests
