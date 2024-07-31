@@ -2,6 +2,8 @@
 
 SumAny is a web application built using Streamlit that allows users to upload text, PDF, Word, or WAV audio files for summarization. It also provides features such as keyword highlighting, text-to-speech, and a chatbot to answer questions about the text.
 
+Link: https://sumany-hzmgzhcacdc3jagb9vomd5.streamlit.app/
+
 ## Features
 
 - **File Upload**: Upload text, PDF, Word, or WAV audio files.
